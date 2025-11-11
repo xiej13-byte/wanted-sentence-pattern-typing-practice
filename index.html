@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼音打字练习游戏 | Pinyin Typing Practice Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .timer, .progress {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .pinyin-display {
+            font-size: 1.8rem;
+            color: #e74c3c;
+            margin: 25px 0;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .typing-area {
+            margin: 20px 0;
+        }
+        
+        #user-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.4rem;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #user-input:focus {
+            border-color: #2980b9;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+        }
+        
+        .instructions {
+            background: #e8f4fc;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        .instructions h3 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+        
+        .feedback {
+            min-height: 60px;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .highlight-error {
+            background-color: #ffcccc;
+            padding: 2px 4px;
+            border-radius: 3px;
+            text-decoration: underline;
+        }
+        
+        .highlight-correct {
+            background-color: #ccffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .controls {
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 0 10px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .language-toggle {
+            margin-top: 20px;
+        }
+        
+        .language-toggle button {
+            background-color: #7f8c8d;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .language-toggle button.active {
+            background-color: #3498db;
+        }
+        
+        .stats {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .pinyin-display {
+                font-size: 1.4rem;
+            }
+            
+            #user-input {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>拼音打字练习游戏</h1>
+        <div class="subtitle">Pinyin Typing Practice Game</div>
+        
+        <div class="game-info">
+            <div class="timer">时间/Time: <span id="time">00:00</span></div>
+            <div class="progress">进度/Progress: <span id="current">1</span>/<span id="total">9</span></div>
+        </div>
+        
+        <div class="instructions">
+            <h3>游戏说明 / Game Instructions</h3>
+            <p>根据显示的拼音输入正确的汉字句子。注意标点符号！</p>
+            <p>Type the correct Chinese sentence based on the displayed Pinyin. Pay attention to punctuation!</p>
+            <ul>
+                <li>如果打错，需要纠正错误后才能继续</li>
+                <li>If you make a mistake, you must correct it before continuing</li>
+                <li>红色高亮显示错误，绿色显示正确部分</li>
+                <li>Red highlights errors, green shows correct parts</li>
+            </ul>
+        </div>
+        
+        <div class="pinyin-display" id="pinyin-display"></div>
+        
+        <div class="typing-area">
+            <input type="text" id="user-input" placeholder="在这里输入汉字 / Type Chinese characters here" autocomplete="off">
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+        
+        <div class="controls">
+            <button id="check-btn">检查 / Check</button>
+            <button id="next-btn" disabled>下一题 / Next</button>
+            <button id="reset-btn">重置 / Reset</button>
+        </div>
+        
+        <div class="language-toggle">
+            <button id="lang-cn" class="active">中文</button>
+            <button id="lang-en">English</button>
+        </div>
+        
+        <div class="stats" id="stats"></div>
+    </div>
+
+    <script>
+        // 句子数据
+        const sentences = [
+            { pinyin: "wǒ yǒu dà dà de yǎn jīng .", text: "我有大大的眼睛。" },
+            { pinyin: "wǒ yǒu xiǎo xiǎo de zuǐ ba .", text: "我有小小的嘴巴。" },
+            { pinyin: "wǒ yǒu hēi sè de tóu fa .", text: "我有黑色的头发。" },
+            { pinyin: "wǒ chuān lǜ sè de yī fu .", text: "我穿绿色的衣服。" },
+            { pinyin: "wǒ hěn kāi xīn .", text: "我很开心。" },
+            { pinyin: "wǒ de tóu fa shì chéng sè de .", text: "我的头发是橙色的。" },
+            { pinyin: "wǒ chuān hóng sè hé huáng sè de chèn shān .", text: "我穿红色和黄色的衬衫。" },
+            { pinyin: "wǒ de kù zi shì lán sè de .", text: "我的裤子是蓝色的。" },
+            { pinyin: "wǒ de xié zi shì zǐ sè hé zōng sè de .", text: "我的鞋子是紫色和棕色的。" }
+        ];
+
+        // 游戏状态
+        let currentSentenceIndex = 0;
+        let startTime;
+        let timerInterval;
+        let isEnglish = false;
+        let currentInput = "";
+        let isChecking = false;
+
+        // DOM元素
+        const pinyinDisplay = document.getElementById('pinyin-display');
+        const userInput = document.getElementById('user-input');
+        const feedback = document.getElementById('feedback');
+        const checkBtn = document.getElementById('check-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const timeDisplay = document.getElementById('time');
+        const currentDisplay = document.getElementById('current');
+        const totalDisplay = document.getElementById('total');
+        const statsDisplay = document.getElementById('stats');
+        const langCnBtn = document.getElementById('lang-cn');
+        const langEnBtn = document.getElementById('lang-en');
+
+        // 初始化游戏
+        function initGame() {
+            totalDisplay.textContent = sentences.length;
+            currentDisplay.textContent = currentSentenceIndex + 1;
+            pinyinDisplay.textContent = sentences[currentSentenceIndex].pinyin;
+            userInput.value = "";
+            feedback.textContent = isEnglish ? 
+                "Type the sentence above and click Check" : 
+                "输入上面的句子，然后点击检查";
+            feedback.className = "feedback";
+            nextBtn.disabled = true;
+            userInput.disabled = false;
+            userInput.focus();
+            
+            if (!startTime) {
+                startTime = new Date();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+            
+            updateStats();
+        }
+
+        // 更新计时器
+        function updateTimer() {
+            const currentTime = new Date();
+            const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+            const minutes = Math.floor(elapsedTime / 60);
+            const seconds = elapsedTime % 60;
+            timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // 检查输入
+        function checkInput() {
+            if (isChecking) return;
+            
+            isChecking = true;
+            const userText = userInput.value.trim();
+            const correctText = sentences[currentSentenceIndex].text;
+            
+            if (userText === correctText) {
+                // 输入正确
+                feedback.textContent = isEnglish ? 
+                    "Correct! Well done!" : 
+                    "正确！做得好！";
+                feedback.className = "feedback correct";
+                nextBtn.disabled = false;
+                userInput.disabled = true;
+            } else {
+                // 输入错误，显示错误信息
+                let errorMessage = isEnglish ? 
+                    "Incorrect. Please correct the errors and try again." : 
+                    "不正确。请纠正错误并重试。";
+                
+                let comparisonHTML = compareTexts(userText, correctText);
+                
+                feedback.innerHTML = `<div>${errorMessage}</div><div>${comparisonHTML}</div>`;
+                feedback.className = "feedback incorrect";
+                nextBtn.disabled = true;
+            }
+            
+            isChecking = false;
+            updateStats();
+        }
+
+        // 比较文本并高亮显示差异
+        function compareTexts(userText, correctText) {
+            let result = "";
+            const maxLength = Math.max(userText.length, correctText.length);
+            
+            for (let i = 0; i < maxLength; i++) {
+                if (i >= userText.length) {
+                    // 用户输入比正确答案短
+                    result += `<span class="highlight-error">?</span>`;
+                } else if (i >= correctText.length) {
+                    // 用户输入比正确答案长
+                    result += `<span class="highlight-error">${userText[i]}</span>`;
+                } else if (userText[i] === correctText[i]) {
+                    // 字符正确
+                    result += `<span class="highlight-correct">${userText[i]}</span>`;
+                } else {
+                    // 字符错误
+                    result += `<span class="highlight-error">${userText[i]}</span>`;
+                }
+            }
+            
+            const correctAnswer = isEnglish ? 
+                `Correct answer: ${correctText}` : 
+                `正确答案: ${correctText}`;
+            
+            return `<div>${result}</div><div style="margin-top: 10px;">${correctAnswer}</div>`;
+        }
+
+        // 下一题
+        function nextSentence() {
+            currentSentenceIndex++;
+            if (currentSentenceIndex >= sentences.length) {
+                // 游戏结束
+                clearInterval(timerInterval);
+                const endTime = new Date();
+                const totalTime = Math.floor((endTime - startTime) / 1000);
+                const minutes = Math.floor(totalTime / 60);
+                const seconds = totalTime % 60;
+                
+                feedback.textContent = isEnglish ? 
+                    `Congratulations! You completed all sentences in ${minutes}m ${seconds}s!` : 
+                    `恭喜！你用 ${minutes}分 ${seconds}秒 完成了所有句子！`;
+                feedback.className = "feedback correct";
+                
+                pinyinDisplay.textContent = isEnglish ? 
+                    "Game Completed!" : 
+                    "游戏完成！";
+                
+                userInput.disabled = true;
+                checkBtn.disabled = true;
+                nextBtn.disabled = true;
+            } else {
+                currentDisplay.textContent = currentSentenceIndex + 1;
+                initGame();
+            }
+        }
+
+        // 重置游戏
+        function resetGame() {
+            clearInterval(timerInterval);
+            currentSentenceIndex = 0;
+            startTime = null;
+            initGame();
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const accuracy = currentSentenceIndex > 0 ? 
+                Math.round((currentSentenceIndex / sentences.length) * 100) : 0;
+            
+            statsDisplay.textContent = isEnglish ? 
+                `Accuracy: ${accuracy}%` : 
+                `准确率: ${accuracy}%`;
+        }
+
+        // 切换语言
+        function toggleLanguage(lang) {
+            isEnglish = (lang === 'en');
+            
+            // 更新按钮状态
+            langCnBtn.classList.toggle('active', !isEnglish);
+            langEnBtn.classList.toggle('active', isEnglish);
+            
+            // 更新界面文本
+            document.querySelector('h1').textContent = isEnglish ? 
+                "Pinyin Typing Practice Game" : 
+                "拼音打字练习游戏";
+            
+            document.querySelector('.subtitle').textContent = isEnglish ? 
+                "Improve your Chinese typing skills" : 
+                "提高你的中文打字技能";
+            
+            document.querySelector('.timer').innerHTML = isEnglish ? 
+                "Time: <span id='time'>00:00</span>" : 
+                "时间: <span id='time'>00:00</span>";
+            
+            document.querySelector('.progress').innerHTML = isEnglish ? 
+                "Progress: <span id='current'>1</span>/<span id='total'>9</span>" : 
+                "进度: <span id='current'>1</span>/<span id='total'>9</span>";
+            
+            userInput.placeholder = isEnglish ? 
+                "Type Chinese characters here" : 
+                "在这里输入汉字";
+            
+            checkBtn.textContent = isEnglish ? "Check" : "检查";
+            nextBtn.textContent = isEnglish ? "Next" : "下一题";
+            resetBtn.textContent = isEnglish ? "Reset" : "重置";
+            
+            // 更新说明
+            const instructions = document.querySelector('.instructions');
+            if (isEnglish) {
+                instructions.innerHTML = `
+                    <h3>Game Instructions</h3>
+                    <p>Type the correct Chinese sentence based on the displayed Pinyin. Pay attention to punctuation!</p>
+                    <ul>
+                        <li>If you make a mistake, you must correct it before continuing</li>
+                        <li>Red highlights errors, green shows correct parts</li>
+                    </ul>
+                `;
+            } else {
+                instructions.innerHTML = `
+                    <h3>游戏说明</h3>
+                    <p>根据显示的拼音输入正确的汉字句子。注意标点符号！</p>
+                    <ul>
+                        <li>如果打错，需要纠正错误后才能继续</li>
+                        <li>红色高亮显示错误，绿色显示正确部分</li>
+                    </ul>
+                `;
+            }
+            
+            // 重新初始化当前题目
+            initGame();
+        }
+
+        // 事件监听
+        checkBtn.addEventListener('click', checkInput);
+        nextBtn.addEventListener('click', nextSentence);
+        resetBtn.addEventListener('click', resetGame);
+        langCnBtn.addEventListener('click', () => toggleLanguage('cn'));
+        langEnBtn.addEventListener('click', () => toggleLanguage('en'));
+
+        // 输入框回车键检查
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkInput();
+            }
+        });
+
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
